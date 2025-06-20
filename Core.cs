@@ -10,17 +10,17 @@ namespace BananaShooterMod
 {
     public class Core : MelonMod
     {
-        // IMGUI Settings
+        // IMGUI Settings   
         private bool _showMenu = true;
         private Rect _windowRect = new Rect(100, 190, 350, 400);
         private GUISkin _customSkin;
-        private Jump _jumpHandler;
+        private PlayerMovementHandler _movementHandler;
 
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("IMGUI Mod Initialized! Press F4 to toggle the menu.");
             SetupGUISkin();
-            _jumpHandler = new Jump();
+            _movementHandler = new PlayerMovementHandler();
         }
 
         public override void OnUpdate()
@@ -56,7 +56,7 @@ namespace BananaShooterMod
             if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Max Jump"))
             {
                 LoggerInstance.Msg("Set Max Jump button clicked!");
-                _jumpHandler.GetAndSetMaxJump();
+                _movementHandler.GetAndSetMaxJump();
             }
             yPos += height + padding;
 
@@ -64,13 +64,23 @@ namespace BananaShooterMod
             if (GUI.Button(new Rect(xPos, yPos, width, height), "Dump Player Info"))
             {
                 LoggerInstance.Msg("Dump Player Info button clicked!");
-                _jumpHandler.DumpPlayerMovementInfo();
+                _movementHandler.DumpPlayerMovementInfo();
             }
             yPos += height + padding;
 
-            if (GUI.Button(new Rect(xPos, yPos, width, height), "Another Option"))
+            // Set Max Jump Count
+            if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Max Jump Count"))
             {
-                LoggerInstance.Msg("Another option was selected!");
+                LoggerInstance.Msg("Set Max Jump Count button clicked!");
+                _movementHandler.GetAndSetMaxJumpCount();
+            }
+            yPos += height + padding;
+
+            // Set Movement Speed
+            if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Movement Speed"))
+            {
+                LoggerInstance.Msg("Set Movement Speed button clicked!");
+                _movementHandler.GetAndSetMovementSpeedFactor();
             }
             yPos += height + padding;
 

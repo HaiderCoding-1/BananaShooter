@@ -323,7 +323,7 @@
 
 	<ItemGroup>
 		<Compile Include="Core.cs" />
-		<Compile Include="Jump.cs" />
+		<Compile Include="PlayerMovementHandler.cs" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
