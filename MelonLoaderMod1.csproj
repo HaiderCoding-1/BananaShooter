@@ -324,6 +324,7 @@
 	<ItemGroup>
 		<Compile Include="Core.cs" />
 		<Compile Include="PlayerMovementHandler.cs" />
+		<Compile Include="Weapons.cs" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

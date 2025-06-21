@@ -8,23 +8,54 @@ using System;
 
 namespace BananaShooterMod
 {
+    public enum MenuPage
+    {
+        Main,
+        Movement,
+        Player,
+        Weapon,
+        Debug
+    }
+
     public class Core : MelonMod
     {
-        // IMGUI Settings   
+        // --- IMGUI Settings ---
         private bool _showMenu = true;
         private Rect _windowRect = new Rect(100, 190, 350, 400);
         private GUISkin _customSkin;
         private PlayerMovementHandler _movementHandler;
+        private Weapons _weaponsHandler; 
+        private MenuPage _currentPage = MenuPage.Main;
+
+        private float _jumpSliderValue = 10f;
+        private float _MovementSpeedValue = 1f;
+        private int _jumpCountValue = 2;
+        private int _bulletCountValue = 30; 
+
 
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("IMGUI Mod Initialized! Press F4 to toggle the menu.");
             SetupGUISkin();
             _movementHandler = new PlayerMovementHandler();
+            _weaponsHandler = new Weapons();
+
+            float initialJump = _movementHandler.GetCurrentJumpFactor();
+            if (initialJump != -1f) { _jumpSliderValue = initialJump;}
+            int initialJumpCount = _movementHandler.GetCurrentJumpCount();
+            if (initialJumpCount != -1) { _jumpCountValue = initialJumpCount; }
+            int initialBullets = _weaponsHandler.GetCurrentBulletCount();
+            if (initialBullets != -1) { _bulletCountValue = initialBullets; }
         }
 
         public override void OnUpdate()
         {
+            if (_weaponsHandler != null && _showMenu && _currentPage == MenuPage.Weapon)
+            {
+                int currentBullets = _weaponsHandler.GetCurrentBulletCount();
+                if (currentBullets != -1) { _bulletCountValue = currentBullets; }
+            }
+
             if (Input.GetKeyDown(KeyCode.F4))
             {
                 _showMenu = !_showMenu;
@@ -33,10 +64,7 @@ namespace BananaShooterMod
 
         public override void OnGUI()
         {
-            if (!_showMenu)
-            {
-                return;
-            }
+            if (!_showMenu) return;
             GUI.skin = _customSkin;
             _windowRect = GUI.Window(0, _windowRect, (GUI.WindowFunction)MyWindow, "Banana Mod Menu");
         }
@@ -48,47 +76,108 @@ namespace BananaShooterMod
             float height = 30f;
             float padding = 10f;
             float xPos = 20f;
+            float buttonWidth = 40f;
+            float labelWidth = width - (buttonWidth * 2);
 
-            GUI.Label(new Rect(xPos, yPos, width, height), "Welcome to the Mod Menu!", _customSkin.label);
-            yPos += height + padding;
-
-            // Jump Value
-            if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Max Jump"))
+            switch (_currentPage)
             {
-                LoggerInstance.Msg("Set Max Jump button clicked!");
-                _movementHandler.GetAndSetMaxJump();
-            }
-            yPos += height + padding;
+                case MenuPage.Main:
+                    GUI.Label(new Rect(xPos, yPos, width, height), "Main Menu", _customSkin.label);
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Movement Mods")) { _currentPage = MenuPage.Movement; }
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Player Mods")) { _currentPage = MenuPage.Player; }
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Weapon Mods")) { _currentPage = MenuPage.Weapon; }
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Debug Tools")) { _currentPage = MenuPage.Debug; }
+                    yPos += height + padding;
+                    float closeButtonY = _windowRect.height - height - 20f;
+                    if (GUI.Button(new Rect(xPos, closeButtonY, width, height), "Close Menu")) { _showMenu = false; }
+                    break;
 
-            // Dumper Tool 
-            if (GUI.Button(new Rect(xPos, yPos, width, height), "Dump Player Info"))
-            {
-                LoggerInstance.Msg("Dump Player Info button clicked!");
-                _movementHandler.DumpPlayerMovementInfo();
-            }
-            yPos += height + padding;
+                //Jump Power
+                case MenuPage.Movement:
+                    GUI.Label(new Rect(xPos, yPos, width, height), "Movement Mods", _customSkin.label);
+                    yPos += height + padding;
 
-            // Set Max Jump Count
-            if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Max Jump Count"))
-            {
-                LoggerInstance.Msg("Set Max Jump Count button clicked!");
-                _movementHandler.GetAndSetMaxJumpCount();
-            }
-            yPos += height + padding;
+                    // --- Jump Power Adjuster (Layout Changed) ---
+                    float oldJumpPower = _jumpSliderValue;
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _jumpSliderValue -= 0.5f; }
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Jump Power: {_jumpSliderValue.ToString("F1")}");
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _jumpSliderValue += 0.5f; }
+                    _jumpSliderValue = Mathf.Clamp(_jumpSliderValue, 1f, 50f);
+                    if (oldJumpPower != _jumpSliderValue) { _movementHandler.SetJumpFactor(_jumpSliderValue); }
+                    yPos += height + padding;
 
-            // Set Movement Speed
-            if (GUI.Button(new Rect(xPos, yPos, width, height), "Set Movement Speed"))
-            {
-                LoggerInstance.Msg("Set Movement Speed button clicked!");
-                _movementHandler.GetAndSetMovementSpeedFactor();
-            }
-            yPos += height + padding;
+                    // --- Max Jumps Adjuster (Layout Changed) ---
+                    int oldJumpCount = _jumpCountValue;
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _jumpCountValue--; }
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Max Jumps: {_jumpCountValue}");
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _jumpCountValue++; }
+                    _jumpCountValue = Mathf.Clamp(_jumpCountValue, 6, 40);
+                    if (oldJumpCount != _jumpCountValue) { _movementHandler.SetJumpCount(_jumpCountValue); }
+                    yPos += height + padding;
 
-            float closeButtonY = _windowRect.height - height - 20f;
-            if (GUI.Button(new Rect(xPos, closeButtonY, width, height), "Close Menu"))
-            {
-                _showMenu = false;
+                    float oldMovementSpeed = _MovementSpeedValue;
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _MovementSpeedValue -= 0.5f; }
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Movement Speed: { _MovementSpeedValue}");
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _MovementSpeedValue += 0.5f; }
+                    _MovementSpeedValue = Mathf.Clamp(_MovementSpeedValue, 1f, 30f);
+                    if (oldMovementSpeed != _MovementSpeedValue) { _movementHandler.SetMovementSpeed(_MovementSpeedValue); }
+                    yPos += height + padding;
+
+
+
+                    if (GUI.Button(new Rect(xPos, _windowRect.height - height - 20f, width, height), "Back"))
+                    {
+                        _currentPage = MenuPage.Main;
+                    }
+                    break;
+                case MenuPage.Player:
+                    GUI.Label(new Rect(xPos, yPos, width, height), "Player Mods", _customSkin.label);
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, _windowRect.height - height - 20f, width, height), "Back")) { _currentPage = MenuPage.Main; }
+                    break;
+
+                case MenuPage.Weapon:
+                    GUI.Label(new Rect(xPos, yPos, width, height), "Weapon Mods", _customSkin.label);
+                    yPos += height + padding;
+                    int oldBulletCount = _bulletCountValue;
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Bullet Count: {_bulletCountValue}");
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _bulletCountValue--; }
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _bulletCountValue++; }
+                    _bulletCountValue = Mathf.Clamp(_bulletCountValue, 0, 999);
+                    if (oldBulletCount != _bulletCountValue) { _weaponsHandler.SetBulletCount(_bulletCountValue); }
+                    yPos += height + padding;
+
+                    if (GUI.Button(new Rect(xPos, _windowRect.height - height - 20f, width, height), "Back"))
+                    {
+                        _currentPage = MenuPage.Main;
+                    }
+                    break;
+            
+                case MenuPage.Debug:
+                    GUI.Label(new Rect(xPos, yPos, width, height), "Debug Tools", _customSkin.label);
+                    yPos += height + padding;
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Dump Player Info")) { _movementHandler.DumpPlayerMovementInfo(); }
+                    yPos += height + padding;
+      
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Dump Firearms Info"))
+                    {
+                        _movementHandler.DumpFirearmsInfo();
+                    }
+                    yPos += height + padding;
+
+                    if (GUI.Button(new Rect(xPos, _windowRect.height - height - 20f, width, height), "Back"))
+                    {
+                        _currentPage = MenuPage.Main;
+                    }
+                    break;
+
             }
+        
+
             GUI.DragWindow();
         }
 
