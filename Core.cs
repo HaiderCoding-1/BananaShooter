@@ -30,7 +30,10 @@ namespace BananaShooterMod
         private float _jumpSliderValue = 10f;
         private float _MovementSpeedValue = 1f;
         private int _jumpCountValue = 2;
-        private int _bulletCountValue = 30; 
+        private int _bulletCountValue = 30;
+        private float _reloadTimeValue = 1.0f;
+        private float _fireRateValue = 0.5f;
+
 
 
         public override void OnInitializeMelon()
@@ -46,6 +49,10 @@ namespace BananaShooterMod
             if (initialJumpCount != -1) { _jumpCountValue = initialJumpCount; }
             int initialBullets = _weaponsHandler.GetCurrentBulletCount();
             if (initialBullets != -1) { _bulletCountValue = initialBullets; }
+            float initialReload = _weaponsHandler.GetCurrentReloadTime();
+            if (initialReload != -1f) { _reloadTimeValue = initialReload; }
+            float initialFireRate = _weaponsHandler.GetCurrentFireRate();
+            if (initialFireRate != -1f) { _fireRateValue = initialFireRate; }
         }
 
         public override void OnUpdate()
@@ -101,7 +108,7 @@ namespace BananaShooterMod
                     GUI.Label(new Rect(xPos, yPos, width, height), "Movement Mods", _customSkin.label);
                     yPos += height + padding;
 
-                    // --- Jump Power Adjuster (Layout Changed) ---
+                    // --- Jump Power Adjuster
                     float oldJumpPower = _jumpSliderValue;
                     if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _jumpSliderValue -= 0.5f; }
                     GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Jump Power: {_jumpSliderValue.ToString("F1")}");
@@ -110,7 +117,7 @@ namespace BananaShooterMod
                     if (oldJumpPower != _jumpSliderValue) { _movementHandler.SetJumpFactor(_jumpSliderValue); }
                     yPos += height + padding;
 
-                    // --- Max Jumps Adjuster (Layout Changed) ---
+                    // --- Max Jumps Adjuster
                     int oldJumpCount = _jumpCountValue;
                     if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _jumpCountValue--; }
                     GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Max Jumps: {_jumpCountValue}");
@@ -143,6 +150,7 @@ namespace BananaShooterMod
                 case MenuPage.Weapon:
                     GUI.Label(new Rect(xPos, yPos, width, height), "Weapon Mods", _customSkin.label);
                     yPos += height + padding;
+
                     int oldBulletCount = _bulletCountValue;
                     GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Bullet Count: {_bulletCountValue}");
                     if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _bulletCountValue--; }
@@ -150,6 +158,29 @@ namespace BananaShooterMod
                     _bulletCountValue = Mathf.Clamp(_bulletCountValue, 0, 999);
                     if (oldBulletCount != _bulletCountValue) { _weaponsHandler.SetBulletCount(_bulletCountValue); }
                     yPos += height + padding;
+
+                    float oldReloadTime = _reloadTimeValue;
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Reload Time: {_reloadTimeValue.ToString("F2")}s");
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _reloadTimeValue -= 0.1f; }
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _reloadTimeValue += 0.1f; }
+                    _reloadTimeValue = Mathf.Clamp(_reloadTimeValue, 0.1f, 5f);
+                    if (oldReloadTime != _reloadTimeValue) { _weaponsHandler.SetReloadTime(_reloadTimeValue); }
+                    yPos += height + padding;
+                    float oldFireRate = _fireRateValue;
+                    GUI.Label(new Rect(xPos + buttonWidth, yPos, labelWidth, height), $"Fire Rate Delay: {_fireRateValue.ToString("F2")}");
+
+                    if (GUI.Button(new Rect(xPos, yPos, buttonWidth, height), "-")) { _fireRateValue -= 0.05f; }
+                    if (GUI.Button(new Rect(xPos + buttonWidth + labelWidth, yPos, buttonWidth, height), "+")) { _fireRateValue += 0.05f; }
+                    _fireRateValue = Mathf.Clamp(_fireRateValue, 0.01f, 2f); 
+                    if (oldFireRate != _fireRateValue) { _weaponsHandler.SetFireRate(_fireRateValue); }
+                    yPos += height + padding;
+
+                    if (GUI.Button(new Rect(xPos, yPos, width, height), "Refill Current Ammo to 99"))
+                    {
+                        _weaponsHandler.RefillAndSetMaxAmmo(99);
+                    }
+                    yPos += height + padding;
+
 
                     if (GUI.Button(new Rect(xPos, _windowRect.height - height - 20f, width, height), "Back"))
                     {

@@ -37,7 +37,7 @@ namespace BananaShooterMod
                 PropertyInfo jumpFactorProperty = playerMovementType.GetProperty("jumpFactor",
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                if (jumpFactorProperty == null) return -1f; // Return -1 to indicate an error
+                if (jumpFactorProperty == null) return -1f; 
 
                 PlayerMovement playerInstance = UnityEngine.Object.FindObjectOfType<PlayerMovement>();
                 if (playerInstance == null) return -1f;
@@ -58,8 +58,7 @@ namespace BananaShooterMod
                 PropertyInfo maxJumpCountProperty = playerMovementType.GetProperty("maxJumpCount",
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                if (maxJumpCountProperty == null) return -1; // Return -1 on error
-
+                if (maxJumpCountProperty == null) return -1; 
                 PlayerMovement playerInstance = UnityEngine.Object.FindObjectOfType<PlayerMovement>();
                 if (playerInstance == null) return -1;
 
@@ -110,7 +109,6 @@ namespace BananaShooterMod
             }
             catch (Exception e)
             {
-                // Fixed the error message here too
                 MelonLogger.Error($"Error in GetCurrentMovementSpeed: {e.Message}");
                 return -1f;
             }
@@ -129,12 +127,10 @@ namespace BananaShooterMod
                 PlayerMovement playerInstance = UnityEngine.Object.FindObjectOfType<PlayerMovement>();
                 if (playerInstance == null) return;
 
-                // The parameter is now a float, which is correct
                 moveSpeedFactorProperty.SetValue(playerInstance, newSpeed);
             }
             catch (Exception e)
             {
-                // Fixed the error message here too
                 MelonLogger.Error($"Error in SetMovementSpeed: {e.Message}");
             }
         }
@@ -241,7 +237,6 @@ namespace BananaShooterMod
                 MelonLogger.Msg("==========================================");
                 MelonLogger.Msg("Dumping members of firearms class...");
 
-                // The only change is the class name inside typeof()
                 Type targetType = typeof(Firearms);
                 var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
